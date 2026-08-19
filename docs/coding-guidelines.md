@@ -7,4 +7,5 @@
 - Use parameterized Prisma APIs; reserve raw SQL for capabilities such as row locking.
 - Add an API through schema, service, controller, route/RBAC, OpenAPI, and tests.
 - Concurrency tests must inspect persisted counts and inventory, not only status codes.
-- Run `npm run build`, `npm run prisma:validate`, and isolated-database `npm test`.
+- Run `npm run test:unit` for fast isolated feedback. Unit tests must mock PostgreSQL and Upstash rather than depend on external services.
+- Run concurrency/integration tests only against an isolated database, then run `npm run build` and `npm run prisma:validate` before submission.

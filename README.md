@@ -394,6 +394,24 @@ npm run prisma:validate
 
 ### Jest
 
+Run only fast unit tests (no PostgreSQL or Upstash connection required):
+
+```bash
+npm run test:unit
+```
+
+The unit suites cover:
+
+- Authentication registration/login behavior and non-disclosing credential errors.
+- JWT authentication and customer/operator/admin authorization.
+- Booking validation, idempotency-key requirements, quantity bounds, and duplicate categories.
+- Voucher normalization, percentage limits, and campaign date validation.
+- Concert and operation request validation and pagination.
+- Concert cache hits, misses, TTL, key isolation, and not-found behavior.
+- Distributed rate-limit success, `429` rejection, user/IP identifiers, explicit load-test bypass, and fail-open behavior when Upstash is unavailable.
+
+Run every Jest suite that is enabled for the current environment:
+
 ```bash
 npm test
 ```
@@ -491,7 +509,8 @@ Use a dedicated performance database or replenish inventory before repeated runs
 | `npm run dev`             | Start the development server with file watching |
 | `npm run build`           | Compile TypeScript to `dist`                    |
 | `npm start`               | Run the compiled server                         |
-| `npm test`                | Run Jest                                        |
+| `npm test`                | Run all enabled Jest suites                     |
+| `npm run test:unit`       | Run unit tests without PostgreSQL or Upstash    |
 | `npm run format`          | Format source files                             |
 | `npm run format:check`    | Check source formatting                         |
 | `npm run prisma:generate` | Generate Prisma Client                          |

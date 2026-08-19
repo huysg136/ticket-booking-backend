@@ -4,5 +4,12 @@ import app from "./app";
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(
+    JSON.stringify({
+      level: "info",
+      event: "server_started",
+      port: Number(PORT),
+      docs: `http://localhost:${PORT}/api/docs`,
+    }),
+  );
 });

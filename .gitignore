@@ -2,3 +2,8 @@ node_modules/
 dist/
 .env
 coverage/
+performance/results/*.json
+/src/generated/prisma
+.agents
+.claude
+.windsurf

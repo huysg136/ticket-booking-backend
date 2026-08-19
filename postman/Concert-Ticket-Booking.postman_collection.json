@@ -1,0 +1,231 @@
+{
+  "info": {
+    "name": "Concert Ticket Booking",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"new.customer@example.com\",\"password\":\"Assignment123!\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          }
+        },
+        {
+          "name": "Login Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.environment.set('customerToken', pm.response.json().data.token);"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"customer@example.com\",\"password\":\"Assignment123!\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Login Operator",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.environment.set('operatorToken', pm.response.json().data.token);"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"operator@example.com\",\"password\":\"Assignment123!\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Concerts",
+      "item": [
+        {
+          "name": "List Concerts",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const c=pm.response.json().data[0]; if(c){pm.environment.set('concertId',c.id); if(c.ticketCategories[0]) pm.environment.set('ticketCategoryId',c.ticketCategories[0].id);}"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/concerts" }
+        },
+        {
+          "name": "Concert Detail",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/concerts/{{concertId}}" }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Create Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.environment.set('bookingId', pm.response.json().data.id);"] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{customerToken}}", "type": "string" }]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"items\":[{\"ticketCategoryId\":\"{{ticketCategoryId}}\",\"quantity\":1}] ,\"voucherCode\":\"FLASH20\"}"
+            },
+            "url": "{{baseUrl}}/api/bookings"
+          }
+        },
+        {
+          "name": "My Bookings",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{customerToken}}", "type": "string" }]
+            },
+            "url": "{{baseUrl}}/api/bookings/me"
+          }
+        },
+        {
+          "name": "Booking Detail",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{customerToken}}", "type": "string" }]
+            },
+            "url": "{{baseUrl}}/api/bookings/{{bookingId}}"
+          }
+        },
+        {
+          "name": "Retry Same Booking",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{customerToken}}", "type": "string" }]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"items\":[{\"ticketCategoryId\":\"{{ticketCategoryId}}\",\"quantity\":1}]}"
+            },
+            "url": "{{baseUrl}}/api/bookings"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Operations",
+      "item": [
+        {
+          "name": "List Bookings",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{operatorToken}}", "type": "string" }]
+            },
+            "url": "{{baseUrl}}/api/operations/bookings?page=1&limit=20"
+          }
+        },
+        {
+          "name": "Update Booking Status",
+          "request": {
+            "method": "PATCH",
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{operatorToken}}", "type": "string" }]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"status\":\"WAITING_FOR_PAYMENT\"}" },
+            "url": "{{baseUrl}}/api/operations/bookings/{{bookingId}}/status"
+          }
+        },
+        {
+          "name": "Create Concert",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{operatorToken}}", "type": "string" }]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Postman Concert\",\"venue\":\"HCMC\",\"startAt\":\"2031-01-01T12:00:00Z\",\"ticketCategories\":[{\"name\":\"STANDARD\",\"price\":500000,\"totalQuantity\":100}]}"
+            },
+            "url": "{{baseUrl}}/api/operations/concerts"
+          }
+        },
+        {
+          "name": "Publish Concert",
+          "request": {
+            "method": "PATCH",
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{operatorToken}}", "type": "string" }]
+            },
+            "url": "{{baseUrl}}/api/operations/concerts/{{concertId}}/publish"
+          }
+        },
+        {
+          "name": "Create Voucher",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{operatorToken}}", "type": "string" }]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"code\":\"POSTMAN10\",\"type\":\"PERCENTAGE\",\"value\":10,\"usageLimit\":10,\"startsAt\":\"2026-01-01T00:00:00Z\",\"expiresAt\":\"2031-01-01T00:00:00Z\"}"
+            },
+            "url": "{{baseUrl}}/api/operations/vouchers"
+          }
+        }
+      ]
+    }
+  ]
+}

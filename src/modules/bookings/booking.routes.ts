@@ -1,0 +1,12 @@
+import { Router } from "express";
+import { authenticate } from "../../middleware/auth";
+import { validate } from "../../middleware/validate";
+import { asyncHandler } from "../../utils/async-handler";
+import { create, get, mine } from "./booking.controller";
+import { bookingIdSchema, createBookingSchema } from "./booking.schema";
+const router = Router();
+router.use(authenticate);
+router.post("/", validate(createBookingSchema), asyncHandler(create));
+router.get("/me", asyncHandler(mine));
+router.get("/:id", validate(bookingIdSchema), asyncHandler(get));
+export default router;

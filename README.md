@@ -526,8 +526,6 @@ The script:
 
 The recorded local run sustained the configured eight booking requests per second and completed 481 bookings in the one-minute arrival window, with zero unexpected errors, 17.42 ms average booking latency, and 30.01 ms at p95. The one-iteration boundary difference is normal for a time-based constant-arrival-rate executor. This is a local reference result, not a production capacity claim. See [performance test results](docs/performance-test-results.md).
 
-Across local runs, booking p95 latency ranged from approximately 21–30 ms, with zero unexpected errors at eight requests per second.
-
 The recorded throughput result was produced with application rate limiting disabled. Stop the dedicated API after the run. In PowerShell, restore the current terminal before normal use:
 
 ```powershell
@@ -544,37 +542,37 @@ The following screenshots were captured from the documented local setup. They ar
 
 The PostgreSQL integration suite verifies idempotent retries, overselling prevention, booking ownership, and concurrent voucher capacity.
 
-![Concurrency and consistency tests passed](docs/image/concurrency-tests-passed.png)
+![Concurrency and consistency tests passed](docs/images/concurrency-tests-passed.png)
 
 ### Assignment peak traffic
 
 k6 drives the upper assignment target of eight booking requests per second for one minute. Rate limiting is disabled only for this controlled throughput run.
 
-![k6 peak-traffic result](docs/image/performance-k6.png)
+![k6 peak-traffic result](docs/images/performance-k6.png)
 
 ### Distributed rate limiting
 
 Upstash-backed middleware permits the configured quota and returns HTTP `429` after the limit is exceeded.
 
-![Rate limiting returns HTTP 429](docs/image/rate-limit-429.png)
+![Rate limiting returns HTTP 429](docs/images/rate-limit-429.png)
 
 ### Redis catalogue cache
 
 The Upstash Data Browser shows the short-lived published-concert cache key. PostgreSQL remains the inventory source of truth.
 
-![Upstash Redis catalogue cache](docs/image/upstash-redis.png)
+![Upstash Redis catalogue cache](docs/images/upstash-redis.png)
 
 ### Swagger/OpenAPI
 
 Swagger UI exposes the customer and operation API contracts for local execution.
 
-![Swagger API documentation](docs/image/swagger-api.png)
+![Swagger API documentation](docs/images/swagger-api.png)
 
 ### Unit tests
 
 Fast isolated tests cover schemas, authentication, RBAC, catalogue caching, and rate-limit behavior without external services.
 
-![Unit tests passed](docs/image/unit-tests-passed.png)
+![Unit tests passed](docs/images/unit-tests-passed.png)
 
 ## Package scripts
 

@@ -8,27 +8,150 @@ Node.js, TypeScript, Express 5, PostgreSQL, Prisma 7, Zod, JWT, bcryptjs, Swagge
 
 ## Setup
 
-Prerequisites: Node.js 20+, npm, and PostgreSQL.
+### Prerequisites
+
+- Node.js 20 or newer
+- npm
+- PostgreSQL
+
+### 1. Install dependencies
 
 ```bash
 npm install
+```
+
+### 2. Configure environment variables
+
+Windows PowerShell or Command Prompt:
+
+```powershell
 copy .env.example .env
+```
+
+macOS or Linux:
+
+```bash
+cp .env.example .env
+```
+
+Update `.env` for the local PostgreSQL instance:
+
+```env
+PORT=3000
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/concert_ticket"
+JWT_SECRET="replace-with-a-local-secret"
+JWT_EXPIRES_IN="1d"
+```
+
+Do not commit `.env`. Only `.env.example` belongs in the repository.
+
+### 3. Create the PostgreSQL database
+
+Using `psql`:
+
+```sql
+CREATE DATABASE concert_ticket;
+```
+
+Alternatively, create a database named `concert_ticket` with pgAdmin and update `DATABASE_URL` if the username, password, host, port, or database name differs.
+
+### 4. Generate Prisma Client and apply migrations
+
+All migration files are committed under `prisma/migrations` and must remain in the repository.
+
+For local development:
+
+```bash
 npm run prisma:generate
 npm run prisma:migrate
+```
+
+`npm run prisma:migrate` runs `prisma migrate dev`, applies committed migrations, and checks development schema consistency. For a non-development environment, apply existing migrations without creating new ones:
+
+```bash
+npx prisma migrate deploy
+```
+
+### 5. Seed deterministic review data
+
+```bash
 npm run prisma:seed
+```
+
+The seed is repeatable and creates or updates the assignment accounts, published concert, ticket categories, and voucher examples.
+
+### 6. Start the API
+
+Development mode with file watching:
+
+```bash
 npm run dev
 ```
 
-Swagger UI: http://localhost:3000/api/docs
+The API is available at:
+
+```text
+API:     http://localhost:3000
+Health:  http://localhost:3000/health
+Swagger: http://localhost:3000/api/docs
+```
+
+Production-style local build:
+
+```bash
+npm run build
+npm start
+```
+
+### 7. Verify the project
 
 ```bash
 npm run build
 npm run prisma:validate
+npm test
+```
+
+The database integration suite is disabled unless explicitly enabled because it deletes test data during setup. Create and use a separate database such as `concert_ticket_test`, update `DATABASE_URL`, then run:
+
+Windows PowerShell:
+
+```powershell
+$env:RUN_INTEGRATION_TESTS = "true"
+npm test
+```
+
+Windows Command Prompt:
+
+```cmd
 set RUN_INTEGRATION_TESTS=true
 npm test
 ```
 
-Integration tests destructively clean their database and only activate for an explicitly enabled URL containing `test` or `localhost`.
+macOS or Linux:
+
+```bash
+RUN_INTEGRATION_TESTS=true npm test
+```
+
+Never enable the integration suite against a database containing data that must be preserved.
+
+## Reviewer walkthrough
+
+1. Run the setup, migrations, seed, and development server commands above.
+2. Open Swagger at `http://localhost:3000/api/docs`.
+3. Call `POST /api/auth/login` with `customer@example.com` and `Assignment123!`.
+4. Copy the returned token and select Swagger **Authorize**.
+5. List concerts, copy a ticket category UUID, create a booking with a unique `Idempotency-Key`, and retrieve the booking.
+6. Login as `operator@example.com`, authorize with the operator token, list operation bookings, and apply a valid status transition.
+
+For Postman, import both files:
+
+```text
+postman/Concert-Ticket-Booking.postman_collection.json
+postman/Local.postman_environment.json
+```
+
+Select the local environment and run the login requests before authenticated customer or operation requests.
 
 ## Performance test
 

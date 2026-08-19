@@ -27,10 +27,21 @@ if (!/test/i.test(databaseName)) {
 
 const result = spawnSync(
   process.execPath,
-  [require.resolve("jest/bin/jest"), "--runInBand", "tests/booking.integration.test.ts"],
+  [
+    require.resolve("jest/bin/jest"),
+    "--runInBand",
+    "--verbose",
+    "tests/booking.integration.test.ts",
+  ],
   {
     stdio: "inherit",
-    env: { ...process.env, RUN_INTEGRATION_TESTS: "true" },
+    env: {
+      ...process.env,
+      RUN_INTEGRATION_TESTS: "true",
+      NODE_OPTIONS: [process.env.NODE_OPTIONS, "--experimental-vm-modules"]
+        .filter(Boolean)
+        .join(" "),
+    },
   },
 );
 

@@ -1,6 +1,7 @@
 import { BookingStatus, Prisma } from "../../generated/prisma/client";
 import { prisma } from "../../database/prisma";
 import { conflict, notFound } from "../../utils/errors";
+import { cacheDelete } from "../../infrastructure/redis";
 
 const transitions: Record<BookingStatus, BookingStatus[]> = {
   RECEIVED: ["WAITING_FOR_PAYMENT", "CANCELLED"],
@@ -108,11 +109,13 @@ export async function publishConcert(id: string) {
       "CONCERT_NOT_PUBLISHABLE",
       "Only a future draft concert with ticket categories can be published",
     );
-  return prisma.concert.update({
+  const published = await prisma.concert.update({
     where: { id },
     data: { status: "PUBLISHED" },
     include: { ticketCategories: true },
   });
+  await cacheDelete("concerts:published", `concerts:published:${id}`);
+  return published;
 }
 export async function availability(id: string) {
   const value = await prisma.ticketCategory.findUnique({

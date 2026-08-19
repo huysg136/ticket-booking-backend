@@ -13,8 +13,10 @@ flowchart TD
   Bookings --> PG[(PostgreSQL)]
   Operations --> PG
   Concerts --> PG
+  Concerts --> Redis[(Upstash Redis)]
+  API --> Redis
 ```
 
 Routes translate HTTP, controllers coordinate responses, Zod validates boundaries, and services own business/database rules. Booking authenticates, validates the idempotency key, opens a transaction, resolves one concert, decrements sorted categories conditionally, reserves a voucher conditionally, writes snapshots/usages, and commits.
 
-Peak traffic is about 5–8.3 requests/second. Consistency is harder than throughput, so PostgreSQL is more appropriate than distributed transactions. Future growth can add stateless replicas, connection pooling, cached catalogue reads, read replicas, rate limiting, and an extreme-spike waiting room.
+Peak traffic is about 5–8.3 requests/second. Consistency is harder than throughput, so PostgreSQL remains the source of truth and atomic inventory guard. Optional Upstash Redis reduces repeated catalogue reads and provides distributed rate limiting across API instances; it does not lock inventory or replace idempotency. Future growth can add stateless replicas, connection pooling, read replicas, queues, and an extreme-spike waiting room.

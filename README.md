@@ -148,9 +148,22 @@ PORT=3000
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/concert_ticket"
 JWT_SECRET="replace-with-any-local-secret"
 JWT_EXPIRES_IN="1d"
+UPSTASH_REDIS_REST_URL=""
+UPSTASH_REDIS_REST_TOKEN=""
+RATE_LIMIT_ENABLED=true
 ```
 
 Change the PostgreSQL username, password, host, port, or database name if the local installation differs. Never commit `.env`; only `.env.example` belongs in source control.
+
+Upstash Redis is optional. Without both Upstash variables, the API continues to work using PostgreSQL, but catalogue caching and distributed rate limiting are disabled. To enable them, create a Redis database in the Upstash console and copy its REST URL and REST token into `.env`. Never commit the real token.
+
+When enabled:
+
+- Published concert lists and details are cached for 30 seconds. Inventory is still validated against PostgreSQL when booking, so cached availability is only informational and may briefly be stale.
+- Login and registration are limited to 10 requests per minute per IP.
+- Booking creation is limited to 10 requests per minute per authenticated user.
+- Redis failures use fail-open behavior: the request falls back to PostgreSQL or proceeds without rate limiting, and a structured warning is logged.
+- Set `RATE_LIMIT_ENABLED=false` only for controlled performance testing. Do not disable it in a normal deployment.
 
 ### 4. Create the PostgreSQL database
 
@@ -264,11 +277,11 @@ All assignment-only accounts use this password:
 Assignment123!
 ```
 
-| Email | Role |
-|---|---|
+| Email                  | Role     |
+| ---------------------- | -------- |
 | `customer@example.com` | CUSTOMER |
 | `operator@example.com` | OPERATOR |
-| `admin@example.com` | ADMIN |
+| `admin@example.com`    | ADMIN    |
 
 Seeded catalogue data:
 
@@ -473,19 +486,19 @@ Use a dedicated performance database or replenish inventory before repeated runs
 
 ## Package scripts
 
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Start the development server with file watching |
-| `npm run build` | Compile TypeScript to `dist` |
-| `npm start` | Run the compiled server |
-| `npm test` | Run Jest |
-| `npm run format` | Format source files |
-| `npm run format:check` | Check source formatting |
-| `npm run prisma:generate` | Generate Prisma Client |
-| `npm run prisma:migrate` | Run development migrations |
-| `npm run prisma:seed` | Build and seed deterministic review data |
-| `npm run prisma:validate` | Validate the Prisma schema |
-| `npm run perf:booking` | Run the k6 booking load test |
+| Command                   | Purpose                                         |
+| ------------------------- | ----------------------------------------------- |
+| `npm run dev`             | Start the development server with file watching |
+| `npm run build`           | Compile TypeScript to `dist`                    |
+| `npm start`               | Run the compiled server                         |
+| `npm test`                | Run Jest                                        |
+| `npm run format`          | Format source files                             |
+| `npm run format:check`    | Check source formatting                         |
+| `npm run prisma:generate` | Generate Prisma Client                          |
+| `npm run prisma:migrate`  | Run development migrations                      |
+| `npm run prisma:seed`     | Build and seed deterministic review data        |
+| `npm run prisma:validate` | Validate the Prisma schema                      |
+| `npm run perf:booking`    | Run the k6 booking load test                    |
 
 ## Troubleshooting
 

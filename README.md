@@ -62,12 +62,29 @@ Detailed documentation:
 - [Coding guidelines](docs/coding-guidelines.md)
 - [Recorded performance result](docs/performance-test-results.md)
 
+### Assignment deliverables map
+
+| Requested deliverable                                       | Location                                              |
+| ----------------------------------------------------------- | ----------------------------------------------------- |
+| Source code                                                 | `src/`                                                |
+| System architecture, analysis, trade-offs, failure behavior | `docs/system-design.md`                               |
+| ERD, constraints, indexes, transaction and migration design | `docs/database-design.md`                             |
+| Overselling, idempotency, voucher and status concurrency    | `docs/concurrency-and-consistency.md`                 |
+| Implemented/not-implemented scope and assumptions           | `docs/assumptions-and-limitations.md`                 |
+| How to code a new API, conventions, migrations, and tests   | `docs/coding-guidelines.md`                           |
+| Local clone/setup/run instructions                          | This README                                           |
+| OpenAPI documentation                                       | `http://localhost:3000/api/docs` after local startup  |
+| Executable API collection/environment                       | `postman/`                                            |
+| Unit and concurrency tests                                  | `tests/`                                              |
+| Peak-traffic script and recorded result                     | `performance/` and `docs/performance-test-results.md` |
+
 ## Repository structure
 
 ```text
 src/
 ├── config/
 ├── database/
+├── infrastructure/
 ├── middleware/
 ├── modules/
 │   ├── auth/
@@ -88,6 +105,7 @@ tests/
 docs/
 postman/
 performance/
+scripts/
 ```
 
 ## Local setup for reviewers
@@ -378,10 +396,16 @@ Bookings / Booking Detail
 Bookings / Retry Same Booking
 Auth / Login Operator
 Operations / List Bookings
+Operations / Booking Detail
 Operations / Update Booking Status
+Operations / Create Concert
+Operations / Publish Concert
+Operations / Ticket Category Availability
+Operations / Create Voucher
+Operations / List Vouchers
 ```
 
-Postman scripts automatically capture the customer/operator token, concert ID, ticket-category ID, and booking ID where applicable. Change `idempotencyKey` in the environment before creating an unrelated new booking.
+Postman scripts automatically capture the customer/operator token, concert ID, ticket-category ID, and booking ID where applicable. `Create Concert` replaces `concertId` and `ticketCategoryId` with the newly created draft so the following publish and availability requests work in sequence. Change `idempotencyKey` before creating an unrelated booking and change the voucher code before repeating voucher creation.
 
 ## Automated verification
 

@@ -170,6 +170,17 @@
           }
         },
         {
+          "name": "Booking Detail",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{operatorToken}}", "type": "string" }]
+            },
+            "url": "{{baseUrl}}/api/operations/bookings/{{bookingId}}"
+          }
+        },
+        {
           "name": "Update Booking Status",
           "request": {
             "method": "PATCH",
@@ -184,6 +195,16 @@
         },
         {
           "name": "Create Concert",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const c=pm.response.json().data; if(c){pm.environment.set('concertId',c.id); if(c.ticketCategories && c.ticketCategories[0]) pm.environment.set('ticketCategoryId',c.ticketCategories[0].id);}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "auth": {
@@ -210,6 +231,17 @@
           }
         },
         {
+          "name": "Ticket Category Availability",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{operatorToken}}", "type": "string" }]
+            },
+            "url": "{{baseUrl}}/api/operations/ticket-categories/{{ticketCategoryId}}/availability"
+          }
+        },
+        {
           "name": "Create Voucher",
           "request": {
             "method": "POST",
@@ -221,6 +253,17 @@
             "body": {
               "mode": "raw",
               "raw": "{\"code\":\"POSTMAN10\",\"type\":\"PERCENTAGE\",\"value\":10,\"usageLimit\":10,\"startsAt\":\"2026-01-01T00:00:00Z\",\"expiresAt\":\"2031-01-01T00:00:00Z\"}"
+            },
+            "url": "{{baseUrl}}/api/operations/vouchers"
+          }
+        },
+        {
+          "name": "List Vouchers",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{operatorToken}}", "type": "string" }]
             },
             "url": "{{baseUrl}}/api/operations/vouchers"
           }

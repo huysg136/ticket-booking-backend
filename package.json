@@ -8,7 +8,7 @@
     "start": "node dist/server.js",
     "test": "jest --runInBand",
     "test:unit": "jest --runInBand --testPathPatterns=unit.test.ts",
-    "test:integration": "jest --runInBand tests",
+    "test:integration": "node scripts/run-integration-tests.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "prisma db seed",

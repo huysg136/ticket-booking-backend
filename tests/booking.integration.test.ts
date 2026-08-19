@@ -5,7 +5,13 @@ import app from "../src/app";
 import { prisma } from "../src/database/prisma";
 
 const dbUrl = process.env.DATABASE_URL ?? "";
-const enabled = process.env.RUN_INTEGRATION_TESTS === "true" && /(test|localhost)/i.test(dbUrl);
+let testDatabase = false;
+try {
+  testDatabase = /test/i.test(new URL(dbUrl).pathname);
+} catch {
+  testDatabase = false;
+}
+const enabled = process.env.RUN_INTEGRATION_TESTS === "true" && testDatabase;
 const suite = enabled ? describe : describe.skip;
 
 suite("booking consistency", () => {

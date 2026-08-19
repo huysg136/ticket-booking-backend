@@ -4,18 +4,20 @@
 
 The booking API was tested locally with k6 at the upper end of the assignment estimate.
 
-| Metric | Result |
-|---|---:|
-| Configured arrival rate | 8 requests/second |
-| Duration | 1 minute |
-| Completed booking iterations | 480 |
-| Interrupted iterations | 0 |
-| Created bookings | 480 |
-| Unexpected error rate | 0% |
-| Checks | 960/960 passed |
-| Booking latency average | 12.02 ms |
-| Booking latency p95 | 21.17 ms |
-| Booking latency maximum | 57.86 ms |
+Application rate limiting was disabled for this controlled run because the script uses one seeded customer and is intended to measure the booking transaction/database path. Rate limiting is tested separately and remains enabled during normal API usage.
+
+| Metric                       |            Result |
+| ---------------------------- | ----------------: |
+| Configured arrival rate      | 8 requests/second |
+| Duration                     |          1 minute |
+| Completed booking iterations |               480 |
+| Interrupted iterations       |                 0 |
+| Created bookings             |               480 |
+| Unexpected error rate        |                0% |
+| Checks                       |    960/960 passed |
+| Booking latency average      |          12.02 ms |
+| Booking latency p95          |          21.17 ms |
+| Booking latency maximum      |          57.86 ms |
 
 Both configured thresholds passed: booking p95 below 1 second and unexpected errors below 1%.
 

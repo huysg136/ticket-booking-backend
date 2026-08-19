@@ -1,5 +1,42 @@
 import swaggerJsdoc from "swagger-jsdoc";
 
+const rateLimitHeaders = {
+  "X-RateLimit-Limit": {
+    description: "Maximum requests allowed in the current window",
+    schema: { type: "integer", example: 10 },
+  },
+  "X-RateLimit-Remaining": {
+    description: "Requests remaining in the current window",
+    schema: { type: "integer", example: 9 },
+  },
+  "X-RateLimit-Reset": {
+    description: "Unix timestamp in milliseconds when the quota resets",
+    schema: { type: "integer", format: "int64" },
+  },
+};
+
+const rateLimitExceeded = {
+  description: "Rate limit exceeded",
+  headers: {
+    ...rateLimitHeaders,
+    "Retry-After": {
+      description: "Seconds until the client should retry",
+      schema: { type: "integer", minimum: 1 },
+    },
+  },
+  content: {
+    "application/json": {
+      schema: { $ref: "#/components/schemas/Error" },
+      example: {
+        error: {
+          code: "RATE_LIMIT_EXCEEDED",
+          message: "Too many requests. Please try again later.",
+        },
+      },
+    },
+  },
+};
+
 const options: swaggerJsdoc.Options = {
   definition: {
     openapi: "3.0.0",
@@ -107,8 +144,9 @@ const options: swaggerJsdoc.Options = {
             },
           },
           responses: {
-            "201": { description: "Registered" },
+            "201": { description: "Registered", headers: rateLimitHeaders },
             "409": { description: "Email exists" },
+            "429": rateLimitExceeded,
           },
         },
       },
@@ -123,8 +161,9 @@ const options: swaggerJsdoc.Options = {
             },
           },
           responses: {
-            "200": { description: "JWT issued" },
+            "200": { description: "JWT issued", headers: rateLimitHeaders },
             "401": { description: "Invalid credentials" },
+            "429": rateLimitExceeded,
           },
         },
       },
@@ -165,9 +204,10 @@ const options: swaggerJsdoc.Options = {
             },
           },
           responses: {
-            "201": { description: "Created" },
-            "200": { description: "Idempotent replay" },
+            "201": { description: "Created", headers: rateLimitHeaders },
+            "200": { description: "Idempotent replay", headers: rateLimitHeaders },
             "409": { description: "Inventory or voucher conflict" },
+            "429": rateLimitExceeded,
           },
         },
       },

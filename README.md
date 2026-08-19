@@ -45,6 +45,7 @@ This project is a modular monolith built with:
 - Prisma ORM 7 with the PostgreSQL driver adapter
 - Zod
 - JWT and bcryptjs
+- Upstash Redis for optional catalogue caching and distributed rate limiting
 - Swagger/OpenAPI
 - Jest and Supertest
 - Postman
@@ -95,7 +96,7 @@ performance/
 
 Install:
 
-- Node.js 20 or newer
+- Node.js 20.19+ or Node.js 22.12+
 - npm
 - PostgreSQL
 - Git
@@ -122,10 +123,10 @@ Use the cloned project root for all subsequent commands.
 ### 2. Install dependencies
 
 ```bash
-npm install
+npm ci
 ```
 
-The committed `package-lock.json` keeps dependency resolution reproducible.
+`npm ci` installs the exact dependency tree committed in `package-lock.json`. Use `npm install` only when intentionally changing dependencies.
 
 ### 3. Create the environment file
 
@@ -438,27 +439,13 @@ Apply migrations:
 npx prisma migrate deploy
 ```
 
-Enable and run the suite.
-
-Windows PowerShell:
-
-```powershell
-$env:RUN_INTEGRATION_TESTS = "true"
-npm test
-```
-
-Windows Command Prompt:
-
-```cmd
-set RUN_INTEGRATION_TESTS=true
-npm test
-```
-
-macOS or Linux:
+Run the dedicated cross-platform command:
 
 ```bash
-RUN_INTEGRATION_TESTS=true npm test
+npm run test:integration
 ```
+
+The command automatically enables the integration suite and refuses to run unless the database name in `DATABASE_URL` contains `test`. This protects the normal development database from the suite's destructive cleanup.
 
 The suite covers:
 
@@ -474,7 +461,22 @@ Never enable this suite against a database containing data that must be preserve
 
 ## Optional performance test
 
-Install [k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) and keep the API running. The default test models the assignment peak at eight booking requests per second for one minute:
+Install [k6](https://grafana.com/docs/k6/latest/set-up/install-k6/). The script deliberately uses one seeded customer, while normal booking rate limiting allows 10 requests per minute per user. Therefore, run a dedicated performance API process with rate limiting disabled so the test measures booking and database throughput rather than abuse-control policy.
+
+Windows PowerShell, terminal 1:
+
+```powershell
+$env:RATE_LIMIT_ENABLED = "false"
+npm run dev
+```
+
+macOS or Linux, terminal 1:
+
+```bash
+RATE_LIMIT_ENABLED=false npm run dev
+```
+
+In terminal 2, run the default assignment peak of eight booking requests per second for one minute:
 
 ```bash
 npm run perf:booking
@@ -500,24 +502,31 @@ The script:
 
 The recorded local run sustained approximately 480 booking requests per minute with 480 completed bookings, zero unexpected errors, and booking latency around 21 ms at p95. This is a local reference result, not a production capacity claim. See [performance test results](docs/performance-test-results.md).
 
+The recorded throughput result was produced with application rate limiting disabled. Stop the dedicated API after the run. In PowerShell, restore the current terminal before normal use:
+
+```powershell
+Remove-Item Env:RATE_LIMIT_ENABLED -ErrorAction SilentlyContinue
+```
+
 Use a dedicated performance database or replenish inventory before repeated runs.
 
 ## Package scripts
 
-| Command                   | Purpose                                         |
-| ------------------------- | ----------------------------------------------- |
-| `npm run dev`             | Start the development server with file watching |
-| `npm run build`           | Compile TypeScript to `dist`                    |
-| `npm start`               | Run the compiled server                         |
-| `npm test`                | Run all enabled Jest suites                     |
-| `npm run test:unit`       | Run unit tests without PostgreSQL or Upstash    |
-| `npm run format`          | Format source files                             |
-| `npm run format:check`    | Check source formatting                         |
-| `npm run prisma:generate` | Generate Prisma Client                          |
-| `npm run prisma:migrate`  | Run development migrations                      |
-| `npm run prisma:seed`     | Build and seed deterministic review data        |
-| `npm run prisma:validate` | Validate the Prisma schema                      |
-| `npm run perf:booking`    | Run the k6 booking load test                    |
+| Command                    | Purpose                                           |
+| -------------------------- | ------------------------------------------------- |
+| `npm run dev`              | Start the development server with file watching   |
+| `npm run build`            | Compile TypeScript to `dist`                      |
+| `npm start`                | Run the compiled server                           |
+| `npm test`                 | Run all enabled Jest suites                       |
+| `npm run test:unit`        | Run unit tests without PostgreSQL or Upstash      |
+| `npm run test:integration` | Run destructive tests against a `*test*` database |
+| `npm run format`           | Format source files                               |
+| `npm run format:check`     | Check source formatting                           |
+| `npm run prisma:generate`  | Generate Prisma Client                            |
+| `npm run prisma:migrate`   | Run development migrations                        |
+| `npm run prisma:seed`      | Build and seed deterministic review data          |
+| `npm run prisma:validate`  | Validate the Prisma schema                        |
+| `npm run perf:booking`     | Run the k6 booking load test                      |
 
 ## Troubleshooting
 
@@ -577,8 +586,9 @@ Intentionally not implemented:
 - Voucher stacking or campaign segmentation.
 - Email/SMS notifications.
 - Refresh tokens and account lockout.
-- Rate limiting, WAF, or production secret management.
-- Redis, queues, microservices, or Kubernetes.
+- WAF and production secret management.
+- Redis-based inventory locking; PostgreSQL remains the inventory source of truth.
+- Queues, microservices, or Kubernetes.
 - Real-time operation dashboard UI.
 - Production deployment configuration.
 

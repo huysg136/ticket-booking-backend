@@ -35,6 +35,8 @@ Backend assignment for a concert ticket booking platform with customer-facing bo
 - Booking items persist unit-price snapshots.
 - Monetary values use PostgreSQL `DECIMAL` and Prisma `Decimal`.
 
+Concurrency mechanisms are selected per invariant rather than using one lock everywhere: inventory and voucher counters use conditional atomic updates, retry and voucher reuse are finalized by unique constraints, and booking status transitions use `SELECT ... FOR UPDATE` because cancellation/expiry is a multi-step workflow that must not restore inventory twice. Redis is intentionally limited to caching and distributed rate limiting; PostgreSQL remains the booking source of truth. See [Concurrency and consistency](docs/concurrency-and-consistency.md) for the decision matrix and trade-offs.
+
 ## Architecture and technology
 
 This project is a modular monolith built with:
